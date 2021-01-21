@@ -42,6 +42,7 @@ def error_check( request ):
 def collections( request ):
   """Displays list of collections by Region."""
   log.debug( 'starting collections()' )
+  start_time = datetime.datetime.now()
   ## helpers ##
   def prepare_data():
     fc = FlatCollection()
@@ -50,11 +51,12 @@ def collections( request ):
     data_dict = {
       'region_codes': fc.make_region_codes_list(),
       'all_collections_dictionaries': all_collections_dictionaries,
-      'login_url': reverse('admin:usep_app_flatcollection_changelist' ),
+      # 'login_url': reverse('admin:usep_app_flatcollection_changelist' ),
+      'admin_links_url': reverse( 'admn_links_url' ),
       'search_url': reverse( 'search_url' ), 'collections_url': reverse( 'search_url' ), 'publications_url': reverse( 'publications_url' ),
       'texts_url': reverse( 'texts_url' ), 'links_url': reverse( 'links_url' ), 'about_url': reverse( 'about_url' ), 'contact_url': reverse( 'contact_url' ),
     }
-    log.debug( 'data_dict, ```%s```' % pprint.pformat(data_dict)[0:5000] )
+    log.debug( 'data_dict (partial), ```%s```...' % pprint.pformat(data_dict)[0:1000] )
     return data_dict
   def build_response( format, callback ):
     if format == 'json':
@@ -69,30 +71,83 @@ def collections( request ):
   format = request.GET.get( 'format', None )
   callback = request.GET.get( 'callback', None )
   response = build_response( format, callback )
+  elapsed_time = unicode( datetime.datetime.now() - start_time )
+  log.debug( 'elapsed time, ```%s```' % elapsed_time )
   return response
+
+
+# def collection( request, collection ):
+#     """Displays list of inscriptions for given collection."""
+#     ## helpers ##
+#     def prepare_data():
+#         log.debug( 'starting collection->prepare_data()' )
+#         c = models.Collection()
+#         solr_data = c.get_solr_data( collection )
+#         if solr_data == []:
+#             data_dict = {}
+#         else:
+#             inscription_dict, num, display_dict = c.enhance_solr_data( solr_data, request.META[u'wsgi.url_scheme'], request.get_host() )
+#             data_dict = {
+#                 u'collection_title': collection,
+#                 u'inscriptions': inscription_dict,
+#                 u'inscription_count': num,
+#                 u'display': display_dict,
+#                 u'flat_collection': FlatCollection.objects.get(collection_code=collection),
+#                 u'show_dates':False,
+#                 }
+#         return data_dict
+#     def build_response( format, callback ):
+#         if format == u'json':
+#             output = json.dumps( data_dict, sort_keys=True, indent=2 )
+#             if callback:
+#                 output = u'%s(%s)' % ( callback, output )
+#             return HttpResponse( output, content_type = u'application/javascript; charset=utf-8' )
+#         else:
+#             return render( request, u'usep_templates/collectioN.html', data_dict )
+#     ## work ##
+#     log.debug( 'starting collection()' )
+#     start_time = datetime.datetime.now()
+#     data_dict = prepare_data()
+#     if data_dict == {}:
+#         return HttpResponseNotFound( '404 / Not Found' )
+#     # log.debug( 'data_dict (partial), ```{}```...'.format(pprint.pformat(data_dict))[0:1000] )
+#     log.debug( 'data_dict (partial), ```%s```...' % pprint.pformat(data_dict)[0:1000] )
+#     format = request.GET.get( u'format', None )
+#     callback = request.GET.get( u'callback', None )
+#     response = build_response( format, callback )
+#     elapsed_time = unicode( datetime.datetime.now() - start_time )
+#     log.debug( 'elapsed time, ```%s```' % elapsed_time )
+#     return response
 
 
 def collection( request, collection ):
     """Displays list of inscriptions for given collection."""
     ## helpers ##
     def prepare_data():
+        log.debug( 'starting collection->prepare_data()' )
         c = models.Collection()
         solr_data = c.get_solr_data( collection )
-        inscription_dict, num, display_dict = c.enhance_solr_data( solr_data, request.META[u'wsgi.url_scheme'], request.get_host() )
-        try:
-            flat_collection_obj = FlatCollection.objects.get(collection_code=collection)
-        except:
-            log.exception( 'problem getting FlatCollection object...' )
-        data_dict = {
-            u'collection_title': collection,
-            u'inscriptions': inscription_dict,
-            u'inscription_count': num,
-            u'display': display_dict,
-            # u'flat_collection': FlatCollection.objects.get(collection_code=collection),
-            u'flat_collection': flat_collection_obj,
-            u'show_dates':False,
-            }
-        log.debug( 'data_dict (partial), ```%s```' % pprint.pformat(data_dict)[0:500] )
+        data_dict = 'init'
+        if solr_data == []:
+            log.debug( 'solr_data empty; setting data_dict to {}' )
+            data_dict = {}
+        if data_dict == 'init':
+            try:
+                flat_collection = FlatCollection.objects.get( collection_code=collection )
+            except:
+                log.exception( 'no collection found; traceback follows; processing will continue; setting data_dict to {}' )
+                data_dict = {}
+        if data_dict == 'init':
+            log.debug( 'data_dict looks good' )
+            inscription_dict, num, display_dict = c.enhance_solr_data( solr_data, request.META[u'wsgi.url_scheme'], request.get_host() )
+            data_dict = {
+                u'collection_title': collection,
+                u'inscriptions': inscription_dict,
+                u'inscription_count': num,
+                u'display': display_dict,
+                u'flat_collection': FlatCollection.objects.get(collection_code=collection),
+                u'show_dates':False,
+                }
         return data_dict
     def build_response( format, callback ):
         if format == u'json':
@@ -103,12 +158,18 @@ def collection( request, collection ):
         else:
             return render( request, u'usep_templates/collectioN.html', data_dict )
     ## work ##
-    log.debug( 'starting collection()' )
+    log.debug( 'starting collection(); collection, ``%s``' % collection )
+    start_time = datetime.datetime.now()
     data_dict = prepare_data()
-    log.debug( 'data_dict, ```{}```'.format(pprint.pformat(data_dict))[0:1000] )
+    if data_dict == {}:
+        return HttpResponseNotFound( '404 / Not Found' )
+    # log.debug( 'data_dict (partial), ```{}```...'.format(pprint.pformat(data_dict))[0:1000] )
+    log.debug( 'data_dict (partial), ```%s```...' % pprint.pformat(data_dict)[0:1000] )
     format = request.GET.get( u'format', None )
     callback = request.GET.get( u'callback', None )
     response = build_response( format, callback )
+    elapsed_time = unicode( datetime.datetime.now() - start_time )
+    log.debug( 'elapsed time, ```%s```' % elapsed_time )
     return response
 
 
@@ -116,6 +177,7 @@ def display_inscription( request, inscription_id ):
     """ Displays inscription html from saxon-ce rendering of source xml and an include file of bib data,
       which is then run through an xsl transform. """
     log.debug( u'display_inscription() starting' )
+    start_time = datetime.datetime.now()
     display_inscription_helper = DisplayInscriptionHelper()  # models.py
     source_xml_url = display_inscription_helper.build_source_xml_url(
         settings_app.DISPLAY_INSCRIPTION_XML_URL_PATTERN, request.is_secure(), request.get_host(), inscription_id )
@@ -127,12 +189,23 @@ def display_inscription( request, inscription_id ):
         settings_app.DISPLAY_INSCRIPTION_XSL_URL,
         settings_app.DISPLAY_INSCRIPTION_SAXONCE_FILE_URL,
         settings_app.DISPLAY_INSCRIPTION_XIPR_URL )
-    log.debug( u'display_inscription() context, %s' % pprint.pformat(context) )
-    return render( request, u'usep_templates/display_inscription.html', context )
+    # log.debug( u'display_inscription() context, %s' % pprint.pformat(context) )
+    log.debug( u'display_inscription() context (partial), ```%s```...' % pprint.pformat(context)[0:1000] )
+    elapsed_time = unicode( datetime.datetime.now() - start_time )
+    log.debug( 'elapsed time, ```%s```' % elapsed_time )
+
+    if request.GET.get('format', '') == 'json':
+        resp = HttpResponse( json.dumps(context, sort_keys=True, indent=2), content_type='application/javascript; charset=utf-8' )
+    else:
+        resp = render( request, u'usep_templates/display_inscription.html', context )
+    log.debug( 'returning resp' )
+    return resp
 
 
 def publications( request ):
     """ Displays list of Corpora, Journals, Monographs, and Unpublished/Missing citations. """
+    log.debug( 'publications() starting' )
+    start_time = datetime.datetime.now()
     hostname = request.get_host()
     custom_static_url = project_settings.STATIC_URL
     publications_stylesheet_url = settings_app.DISPLAY_PUBLICATIONS_XSL_URL
@@ -146,13 +219,16 @@ def publications( request ):
         u'publications_xml_url': publications_xml_url,
         u'custom_static_url': custom_static_url,
     }
+    elapsed_time = unicode( datetime.datetime.now() - start_time )
+    log.debug( 'elapsed time, ```%s```' % elapsed_time )
     return render( request, u'usep_templates/publications.html', data_dict )
-
-
 
 
 def pub_children( request, publication ):
     """displays listing of inscriptions for publication"""
+    log.debug( 'pub_children() starting' )
+    start_time = datetime.datetime.now()
+
     log.debug( u'publication: %s' % publication )
     assert type( publication ) == unicode
 
@@ -179,6 +255,10 @@ def pub_children( request, publication ):
     ## respond
     format = request.GET.get( u'format', None )
     callback = request.GET.get( u'callback', None )
+
+    elapsed_time = unicode( datetime.datetime.now() - start_time )
+    log.debug( 'elapsed time, ```%s```' % elapsed_time )
+
     if format == u'json':
         output = json.dumps( data_dict, sort_keys=True, indent=2 )
         if callback:
@@ -188,6 +268,25 @@ def pub_children( request, publication ):
         return render( request, u'usep_templates/publicatioN.html', data_dict )
 
 
+def admin_links( request ):
+    """ Displays admin-links. """
+    context = {
+        'collections_admin_url': reverse( 'admin:usep_app_flatcollection_changelist' ),
+        'reindex_all_url': settings_app.REINDEX_ALL_URL,
+        'delete_orphans_url': settings_app.DELETE_ORPHANS_URL
+        }
+    format = request.GET.get( 'format', None )
+    if format == 'json':
+        output = json.dumps( context, sort_keys=True, indent=2 )
+        return HttpResponse( output, content_type='application/json; charset=utf-8' )
+    else:
+        return render( request, 'usep_templates/admin_links.html', context )
+    # return HttpResponse( 'admin-links page coming' )
+
+
+def delete_orphans( request ):
+    """ Manages solr orphan deletion. """
+    return HttpResponse( 'solr-orphan-deletion coming' )
 
 
 ## static pages  ##

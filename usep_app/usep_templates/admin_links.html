@@ -1,0 +1,44 @@
+{% extends "usep_templates/base.html" %}
+
+{% block head_title %}admin-links{% endblock head_title %}
+
+{% block in_page_css%}
+    <style type="text/css">
+        /*span#admin_title {
+            text-align: left;
+        }*/
+        h1#pagetitle {
+            text-align: left;
+            margin-top: 1.5em;
+            margin-left: 4em;
+            margin-bottom: -.5em;
+        }
+        div#content {
+            text-align: left;
+            margin-left: 7em;
+        }
+        li {
+            margin-bottom: .5em;
+        }
+        span.info {
+            font-style: italic;
+            font-size: small;
+        }
+        span.disabled {
+            color: grey;
+        }
+    </style>
+{% endblock %}
+
+{% block page_title %}<span id="admin_title">Admin Links</span>{% endblock page_title %}
+
+{% block content %}
+
+    <ul>
+        <li><a href="{{ collections_admin_url }}">Edit Collection Pages</a></li>
+        <li><a href="{{ reindex_all_url }}">Reindex All</a><span class="info"> (will also delete solr orphans)</span></li>
+        <!-- <li><span class="disabled">Delete Solr Orphans</span> <span class="info disabled"> (not yet implemented)</span></li> -->
+        <li><a href="{{ delete_orphans_url }}">Delete Solr Orphans</a></li>
+    </ul>
+
+{% endblock content %}

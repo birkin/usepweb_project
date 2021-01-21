@@ -138,7 +138,9 @@ class PublicationsPage(models.Model):
 # essentially splits them into numeric and non-numeric keys and returns whatever
 # set it was able to break up
 def id_sort(doc):
-    idno = doc[u'msid_idno']
+    """ Called by models.Collection.get_solr_data() """
+    # idno = doc[u'msid_idno']
+    idno = doc.get(u'msid_idno', 'no-msid_idno-found')
 
     # IN THE FUTURE:
     # add to this string to add new characters to split tokens over (splits over "." by default)
@@ -187,9 +189,7 @@ def break_token(token):
     parts += [token[idx1:idx2]]
     return parts
 
-
 def separate_into_languages(docs):
-    """ Called by Collection.enhance_solr_data() """
 
     # Language value/display pairs as of 3/2016
     language_pairs = {
@@ -222,17 +222,15 @@ def separate_into_languages(docs):
 
     # Actual display pairs used for convenience
     d = dict([(lang, language_pairs.get(lang, lang)) for lang in result])
-    log.debug( 'result (partial), ```%s```' % pprint.pformat(result)[0:500] )
-    log.debug( 'docs (partial), ```%s```' % pprint.pformat(docs)[0:500] )
-    log.debug( 'd (partial), ```%s```' % pprint.pformat(d)[0:500] )
+
     return (result, len(docs), d)
 
 class Collection(object):
     """ Handles code to display the inscriptions list for a given collection. """
 
     def get_solr_data( self, collection ):
-        """ Queries solr for collection info.
-            Called by views.collection().prepare_data() """
+        """ Queries solr for collection info. """
+        log.debug( 'starting Collection.get_solr_data()' )
         payload = {
             u'q': u"id:{0}*".format(collection),
             u'fl': u'*',
@@ -244,12 +242,12 @@ class Collection(object):
         log.debug( 'solr url, ```%s```' % r.url )
         d = json.loads( r.content.decode(u'utf-8', u'replace') )
         sorted_doc_list = sorted( d[u'response'][u'docs'], key=id_sort )  # sorts the doc-list on dict key 'msid_idno'
-        log.debug( 'sorted_doc_list (first two entries), ```{}```'.format(pprint.pformat(sorted_doc_list[0:2])) )
+        log.debug( 'sorted_doc_list (first two), ```{}```...'.format(pprint.pformat(sorted_doc_list[0:2])) )
         return sorted_doc_list
 
     def enhance_solr_data( self, solr_data, url_scheme, server_name ):
-        """ Adds to dict entries from solr: image-url and item-url.
-            Called by views.collection().prepare_data() """
+        """ Adds to dict entries from solr: image-url and item-url. """
+        log.debug( 'starting Collection.enhance_solr_data()' )
         enhanced_list = []
         for entry in solr_data:
             image_url = None
@@ -258,10 +256,7 @@ class Collection(object):
             entry[u'image_url'] = image_url
             entry[u'url'] = u'%s://%s%s' % ( url_scheme, server_name, reverse(u'inscription_url', args=(entry[u'id'],)) )
             enhanced_list.append( entry )
-        enhanced_with_language = separate_into_languages(enhanced_list)
-        log.debug( 'enhanced_with_language (partial), ```%s```' % pprint.pformat(enhanced_with_language)[0:500] )
-        log.debug( 'enhanced_with_language (full), ```%s```' % pprint.pformat(enhanced_with_language) )
-        return enhanced_with_language
+        return separate_into_languages(enhanced_list)
 
     # end class Collection()
 
@@ -770,4 +765,3 @@ class Vocab(object):
             return self.map[i]
         else:
             return i
-
