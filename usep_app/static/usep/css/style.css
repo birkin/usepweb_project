@@ -13,6 +13,17 @@ b1b1b1	light grey
 
 /*general layout*/
 
+:root {
+	--main-bg-color: #f7f2e5;
+	--cream-background: #f7f2e5;
+	--darker-cream: #dedcd1;
+	--grey: #424242;
+	--light-grey: #b1b1b1;
+	--dark-teal: #4b7975;
+	--teal: #549390;
+	--light-teal: #7badac;
+}
+
 html{font-size:100.01%;}
 body {
 	background:#F5F5F5;
@@ -340,4 +351,23 @@ margin-left: 50px;
 	position:absolute;
 	left:0px;
 	background:LightGray;
+}
+
+footer {
+	background-color: var(--grey);
+	color: var(--darker-cream);
+
+	margin: 1rem 0 0;
+	padding: 1rem 0;
+}
+
+footer #licenseinfo {
+	margin: 0 auto;
+	
+	width: 650px;
+}
+
+footer #licenseinfo img{
+	float: left;
+	margin: .5rem 1rem 0 0;
 }
