@@ -334,8 +334,10 @@ margin-left: 50px;
 /*Positioning the content and image panes when displaying inscriptions*/
 
 #container {
+	/*
 	position:absolute;
 	left:30px;
+	*/
 	padding-top:20px;
 	padding-bottom:20px;
 }
@@ -355,6 +357,7 @@ margin-left: 50px;
 
 footer {
 	background-color: var(--grey);
+	clear: both;
 	color: var(--darker-cream);
 
 	margin: 1rem 0 0;
