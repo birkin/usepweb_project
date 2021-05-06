@@ -28,9 +28,13 @@ html{font-size:100.01%;}
 body {
 	background:#F5F5F5;
 	color : #000;
+	display: grid;
+/* Grid layout enables the sticky footer. */
 	font-family: Helvetica,Arial,Sans-serif;
+        grid-template-rows: auto 1fr auto;
 	padding:0px;
 	margin:0px;
+	min-height: 100vh;
 	/*font-size: 90%;*/
 	width:100%;
 	}
@@ -359,6 +363,8 @@ footer {
 	background-color: var(--grey);
 	clear: both;
 	color: var(--darker-cream);
+
+	height: 80px;
 
 	margin: 1rem 0 0;
 	padding: 1rem 0;
