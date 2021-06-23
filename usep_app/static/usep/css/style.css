@@ -13,13 +13,28 @@ b1b1b1	light grey
 
 /*general layout*/
 
+:root {
+	--main-bg-color: #f7f2e5;
+	--cream-background: #f7f2e5;
+	--darker-cream: #dedcd1;
+	--grey: #424242;
+	--light-grey: #b1b1b1;
+	--dark-teal: #4b7975;
+	--teal: #549390;
+	--light-teal: #7badac;
+}
+
 html{font-size:100.01%;}
 body {
 	background:#F5F5F5;
 	color : #000;
+	display: grid;
+/* Grid layout enables the sticky footer. */
 	font-family: Helvetica,Arial,Sans-serif;
+        grid-template-rows: auto 1fr auto;
 	padding:0px;
 	margin:0px;
+	min-height: 100vh;
 	/*font-size: 90%;*/
 	width:100%;
 	}
@@ -323,8 +338,10 @@ margin-left: 50px;
 /*Positioning the content and image panes when displaying inscriptions*/
 
 #container {
+	/*
 	position:absolute;
 	left:30px;
+	*/
 	padding-top:20px;
 	padding-bottom:20px;
 }
@@ -340,4 +357,26 @@ margin-left: 50px;
 	position:absolute;
 	left:0px;
 	background:LightGray;
+}
+
+footer {
+	background-color: var(--grey);
+	clear: both;
+	color: var(--darker-cream);
+
+	height: 80px;
+
+	margin: 1rem 0 0;
+	padding: 1rem 0;
+}
+
+footer #licenseinfo {
+	margin: 0 auto;
+	
+	width: 650px;
+}
+
+footer #licenseinfo img{
+	float: left;
+	margin: .5rem 1rem 0 0;
 }

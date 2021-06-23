@@ -218,6 +218,8 @@ def separate_into_languages(docs):
 
     language_pairs_list = [
         ('grc', 'Greek'),
+        ('grc-Latn', 'Greek written in Latin'),
+        ('grc-Cprt', 'Greek written in Cypriot'),
         ('lat', 'Latin'),
         ('la', 'Latin'),
         ('la-Grek', 'Latin written in Greek'),
@@ -304,7 +306,11 @@ class Collection(object):
         for entry in solr_data:
             image_url = None
             if u'graphic_name' in entry.keys():
-                image_url = u'%s/%s' % ( settings_app.INSCRIPTIONS_URL_SEGMENT, entry[u'graphic_name'] )
+                log.debug("enhance_solr_data graphic_name", entry['graphic_name'], entry[u'graphic_name'].startswith('http'))
+                if entry[u'graphic_name'].startswith('https:') or entry[u'graphic_name'].startswith('http:'):
+                    image_url = entry[u'graphic_name']
+                else:
+                    image_url = u'%s/%s' % ( settings_app.INSCRIPTIONS_URL_SEGMENT, entry[u'graphic_name'] )
             entry[u'image_url'] = image_url
             entry[u'url'] = u'%s://%s%s' % ( url_scheme, server_name, reverse(u'inscription_url', args=(entry[u'id'],)) )
             enhanced_list.append( entry )
@@ -408,7 +414,11 @@ class Publication(object):
         for item in self.inscription_entries:
             image_url = None
             if u'graphic_name' in item.keys():
-                image_url = u'%s/%s' % ( settings_app.INSCRIPTIONS_URL_SEGMENT, item[u'graphic_name'] )
+                log.debug("makeImageUrls graphic_name", item['graphic_name'], item[u'graphic_name'].startswith('http:'))
+                if item[u'graphic_name'].startswith('https:') or item[u'graphic_name'].startswith('http:'):
+                    image_url = item[u'graphic_name']
+                else:
+                    image_url = u'%s/%s' % ( settings_app.INSCRIPTIONS_URL_SEGMENT, item[u'graphic_name'] )
             item[u'image_url'] = image_url
         return
 
@@ -746,11 +756,18 @@ class SolrHelper(object):
 
     def enhance_solr_data( self, solr_data, url_scheme, server_name ):
         """ Adds to dict entries from solr: image-url and item-url. """
+        log.debug('starting enhance_solr_data')
         enhanced_list = []
         for entry in solr_data:
             image_url = None
             if u'graphic_name' in entry.keys():
-                image_url = u'%s/%s' % ( settings_app.INSCRIPTIONS_URL_SEGMENT, entry[u'graphic_name'] )
+                #image_url = u'%s/%s' % ( settings_app.INSCRIPTIONS_URL_SEGMENT, entry[u'graphic_name'] )
+                log.debug("enhance_solr_data graphic_name", entry['graphic_name'], entry[u'graphic_name'].startswith('http:'))
+                if entry[u'graphic_name'].startswith('https:') or entry[u'graphic_name'].startswith('http:'):
+                    image_url = entry[u'graphic_name']
+                else:
+                    image_url = u'%s/%s' % ( settings_app.INSCRIPTIONS_URL_SEGMENT, entry[u'graphic_name'] )
+            
             entry[u'image_url'] = image_url
             entry[u'url'] = u'%s://%s%s' % ( url_scheme, server_name, reverse(u'inscription_url', args=(entry[u'id'],)) )
             enhanced_list.append( entry )
